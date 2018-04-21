@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 
 import { Effect, Actions } from '@ngrx/effects';
-import * as pizzaActions from '../actions/pizzas.action';
-import { map, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
+import { map, switchMap, catchError } from 'rxjs/operators';
 
+import * as fromRoot from '../../../app/store';
+import * as pizzaActions from '../actions/pizzas.action';
 import * as fromServices from '../../services';
 
 @Injectable()
@@ -33,6 +34,20 @@ export class PizzasEffects {
       );
 
   @Effect()
+  createPizzaSuccess$ = this.actions$.ofType(pizzaActions.CREATE_PIZZA_SUCCESS)
+  // OBS! Först körs alltid reducern, sedan effekten!
+  .pipe(
+    map((action: pizzaActions.CreatePizzaSuccess) => action.payload),
+    map(pizza => {
+      return new fromRoot.Go({
+        path: ['/products', pizza.id],
+        // video: Multiple Actions in Effects, Router Actions 4min:34s in...
+      });
+    })
+  );
+
+
+  @Effect()
   updatePizza$ = this.actions$.ofType(pizzaActions.UPDATE_PIZZA)
       .pipe(
         map((action: pizzaActions.UpdatePizza) => action.payload),
@@ -59,4 +74,14 @@ export class PizzasEffects {
         })
       );
 
+  @Effect()
+  handlePizzaSuccess$ = this.actions$.ofType(
+    pizzaActions.UPDATE_PIZZA_SUCCESS,
+    pizzaActions.REMOVE_PIZZA_SUCCESS).pipe(
+      map(pizza => {
+        return new fromRoot.Go({
+          path: ['/products'],
+        });
+      })
+    );
 }
